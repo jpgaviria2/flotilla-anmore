@@ -6,12 +6,12 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import FeedMessageItem from "@app/components/FeedMessageItem.svelte"
+  import ThreadItem from "@app/components/ThreadItem.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import {pushModal} from "@app/util/modal"
   import {ANMORE_RELAY} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
-  import {NOTE} from "@welshman/util"
+  import {THREAD} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {pubkey} from "@welshman/app"
 
@@ -39,7 +39,7 @@
       const feed = makeFeed({
         url: ANMORE_RELAY,
         element: element,
-        filters: [{kinds: [NOTE]}],
+        filters: [{kinds: [THREAD]}],
         onExhausted: () => {
           loading = false
         },
@@ -92,7 +92,7 @@
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:max-w-4xl lg:max-w-5xl lg:p-8">
       {#each $feedEventsStore as event (event.id)}
         <div in:fly>
-          <FeedMessageItem url={ANMORE_RELAY} {event} />
+          <ThreadItem url={ANMORE_RELAY} event={$state.snapshot(event)} />
         </div>
       {/each}
       {#if loading}
@@ -100,9 +100,7 @@
           <Spinner {loading}>Loading feed...</Spinner>
         </p>
       {:else if $feedEventsStore.length === 0}
-        <p class="flex h-10 items-center justify-center py-20" transition:fly>
-          No feed messages found.
-        </p>
+        <p class="flex h-10 items-center justify-center py-20" transition:fly>No threads found.</p>
       {:else}
         <p class="flex h-10 items-center justify-center py-20" transition:fly>That's all!</p>
       {/if}
