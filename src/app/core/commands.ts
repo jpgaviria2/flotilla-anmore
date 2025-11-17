@@ -519,7 +519,7 @@ export const createAlert = async (params: CreateAlertParams): Promise<CreateAler
   const $pubkey = pubkey.get()!
   const address = getAddress(thunk.event)
   const statusEvents = await loadAlertStatuses($pubkey!)
-  const statusEvent = statusEvents.find(event => getTagValue("d", event.tags) === address)
+  const statusEvent = statusEvents?.find(event => getTagValue("d", event.tags) === address)
   const statusTags = statusEvent
     ? parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, statusEvent.content))
     : []

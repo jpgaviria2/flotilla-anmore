@@ -22,8 +22,21 @@
       <h1 class="heading">Welcome to {PLATFORM_NAME}!</h1>
       <p class="text-center">The chat app built for self-hosted communities.</p>
     </div>
-    <Button onclick={logIn}>
+    <Button onclick={signUp}>
       <CardButton class="btn-primary">
+        {#snippet icon()}
+          <div><Icon icon={AddCircle} size={7} /></div>
+        {/snippet}
+        {#snippet title()}
+          <div>Sign up with Email</div>
+        {/snippet}
+        {#snippet info()}
+          <div>Get started in seconds. We'll send your keys to your email.</div>
+        {/snippet}
+      </CardButton>
+    </Button>
+    <Button onclick={logIn} class="btn-neutral">
+      <CardButton>
         {#snippet icon()}
           <div><Icon icon={Login} size={7} /></div>
         {/snippet}
@@ -31,20 +44,7 @@
           <div>Log in</div>
         {/snippet}
         {#snippet info()}
-          <div>If you've been here before, you know the drill.</div>
-        {/snippet}
-      </CardButton>
-    </Button>
-    <Button onclick={signUp} class="btn-neutral">
-      <CardButton>
-        {#snippet icon()}
-          <div><Icon icon={AddCircle} size={7} /></div>
-        {/snippet}
-        {#snippet title()}
-          <div>Create an account</div>
-        {/snippet}
-        {#snippet info()}
-          <div>Just a few questions and you'll be on your way.</div>
+          <div>Already have your keys? Log in here.</div>
         {/snippet}
       </CardButton>
     </Button>

@@ -6,5 +6,5 @@
 
   const url = decodeRelay($page.params.relay!)
 
-  goto(makeSpacePath(url, "recent"))
+  goto(makeSpacePath(url, "notes"))
 </script>

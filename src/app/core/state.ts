@@ -145,9 +145,11 @@ export const NOTIFIER_RELAY = import.meta.env.VITE_NOTIFIER_RELAY
 
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
-export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS)
+// Hardcoded to single relay
+export const ANMORE_RELAY = normalizeRelayUrl("wss://relay.anmore.me")
+export const INDEXER_RELAYS = [ANMORE_RELAY]
 
-export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS)
+export const SIGNER_RELAYS = [ANMORE_RELAY]
 
 export const PLATFORM_URL = import.meta.env.VITE_PLATFORM_URL
 
@@ -159,7 +161,7 @@ export const PLATFORM_LOGO = PLATFORM_URL + "/logo.png"
 
 export const PLATFORM_NAME = import.meta.env.VITE_PLATFORM_NAME
 
-export const PLATFORM_RELAYS = fromCsv(import.meta.env.VITE_PLATFORM_RELAYS)
+export const PLATFORM_RELAYS = [ANMORE_RELAY]
 
 export const PLATFORM_ACCENT = import.meta.env.VITE_PLATFORM_ACCENT
 
@@ -313,6 +315,11 @@ export const REACTION_KINDS = [REPORT, DELETE, REACTION]
 if (ENABLE_ZAPS) {
   REACTION_KINDS.push(ZAP_RESPONSE)
 }
+
+// Marketplace event kinds
+export const MARKETPLACE_STALL = 30017
+export const MARKETPLACE_PRODUCT = 30018
+export const CLASSIFIED_LISTING = 30402
 
 export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD]
 

@@ -18,6 +18,7 @@ import {
   RELAY_REMOVE_MEMBER,
   isSignedEvent,
   unionFilters,
+  NOTE,
 } from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {request, load, pull} from "@welshman/net"
@@ -42,6 +43,10 @@ import {
   MESSAGE_KINDS,
   CONTENT_KINDS,
   INDEXER_RELAYS,
+  ANMORE_RELAY,
+  MARKETPLACE_STALL,
+  MARKETPLACE_PRODUCT,
+  CLASSIFIED_LISTING,
   loadSettings,
   loadGroupSelections,
   userSpaceUrls,
@@ -102,29 +107,14 @@ const pullAndListen = ({relays, filters, signal}: PullOpts) => {
 // Relays
 
 const syncRelays = () => {
+  // Auto-connect to hardcoded relay
   for (const url of INDEXER_RELAYS) {
     loadRelay(url)
+    hasBlossomSupport(url)
   }
 
-  const unsubscribePage = page.subscribe($page => {
-    if ($page.params.relay) {
-      const url = decodeRelay($page.params.relay)
-
-      loadRelay(url)
-      hasBlossomSupport(url)
-    }
-  })
-
-  const unsubscribeSpaceUrls = userSpaceUrls.subscribe(urls => {
-    for (const url of urls) {
-      loadRelay(url)
-    }
-  })
-
-  return () => {
-    unsubscribePage()
-    unsubscribeSpaceUrls()
-  }
+  // Return empty cleanup function since we're not subscribing to page changes
+  return () => {}
 }
 
 // User data
@@ -270,6 +260,9 @@ const syncSpace = (url: string) => {
       ...MESSAGE_KINDS.map(kind => ({kinds: [kind]})),
       makeCommentFilter(CONTENT_KINDS),
       {kinds: REACTION_KINDS, limit: 0},
+      // Always sync public content kinds for ANMORE_RELAY
+      {kinds: [NOTE]},
+      {kinds: [MARKETPLACE_STALL, MARKETPLACE_PRODUCT, CLASSIFIED_LISTING]},
     ],
   })
 
@@ -279,10 +272,13 @@ const syncSpace = (url: string) => {
 const syncSpaces = () => {
   const membershipUnsubscribersByUrl = new Map<string, Unsubscriber>()
 
+  // Always sync ANMORE_RELAY regardless of login status
+  const anmoreUnsubscribe = syncSpace(ANMORE_RELAY)
+
   const unsubscribeSpaceUrls = userSpaceUrls.subscribe(urls => {
-    // stop syncing removed spaces
+    // stop syncing removed spaces (but never remove ANMORE_RELAY)
     for (const [url, unsubscribe] of membershipUnsubscribersByUrl.entries()) {
-      if (!urls.includes(url)) {
+      if (url !== ANMORE_RELAY && !urls.includes(url)) {
         membershipUnsubscribersByUrl.delete(url)
         unsubscribe()
       }
@@ -290,7 +286,7 @@ const syncSpaces = () => {
 
     // Start syncing newly added spaces
     for (const url of urls) {
-      if (!membershipUnsubscribersByUrl.has(url)) {
+      if (url !== ANMORE_RELAY && !membershipUnsubscribersByUrl.has(url)) {
         membershipUnsubscribersByUrl.set(url, syncSpace(url))
       }
     }
@@ -303,8 +299,12 @@ const syncSpaces = () => {
     if ($page.params.relay) {
       const url = decodeRelay($page.params.relay)
 
-      // Don't subscribe twice if the user is a member
-      if (!pageUnsubscribersByUrl.has(url) && !get(userSpaceUrls).includes(url)) {
+      // Don't subscribe twice if the user is a member or if it's ANMORE_RELAY
+      if (
+        url !== ANMORE_RELAY &&
+        !pageUnsubscribersByUrl.has(url) &&
+        !get(userSpaceUrls).includes(url)
+      ) {
         pageUnsubscribersByUrl.set(url, syncSpace(url))
       }
 
@@ -321,6 +321,7 @@ const syncSpaces = () => {
   })
 
   return () => {
+    anmoreUnsubscribe()
     Array.from(membershipUnsubscribersByUrl.values()).forEach(call)
     Array.from(pageUnsubscribersByUrl.values()).forEach(call)
     unsubscribeSpaceUrls()

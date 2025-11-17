@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {derived} from "svelte/store"
-  import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD} from "@welshman/util"
+  import {displayRelayUrl, getTagValue, THREAD} from "@welshman/util"
   import {deriveRelay} from "@welshman/app"
   import {fly} from "@lib/transition"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
@@ -17,6 +17,7 @@
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic-2.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
+  import ShopMinimalistic from "@assets/icons/shop-minimalistic.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
@@ -50,7 +51,10 @@
     alerts,
     deriveUserCanCreateRoom,
     deriveUserIsSpaceAdmin,
+    MARKETPLACE_PRODUCT,
+    CLASSIFIED_LISTING,
   } from "@app/core/state"
+  import {NOTE} from "@welshman/util"
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath, makeChatPath} from "@app/util/routes"
@@ -59,7 +63,9 @@
 
   const relay = deriveRelay(url)
   const chatPath = makeSpacePath(url, "chat")
-  const goalsPath = makeSpacePath(url, "goals")
+  const notesPath = makeSpacePath(url, "notes")
+  const marketplacePath = makeSpacePath(url, "marketplace")
+  const fundraisingPath = makeSpacePath(url, "fundraising")
   const threadsPath = makeSpacePath(url, "threads")
   const calendarPath = makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
@@ -69,7 +75,9 @@
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
   const spaceKinds = derived(
-    deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
+    deriveEventsForUrl(url, [
+      {kinds: [...CONTENT_KINDS, NOTE, MARKETPLACE_PRODUCT, CLASSIFIED_LISTING]},
+    ]),
     $events => new Set($events.map(e => e.kind)),
   )
 
@@ -196,31 +204,41 @@
           {replaceState}
           href={chatPath}
           notification={$notifications.has(chatPath)}>
-          <Icon icon={ChatRound} /> Chat
+          <Icon icon={ChatRound} /> Activity
         </SecondaryNavItem>
       {/if}
-      {#if ENABLE_ZAPS && $spaceKinds.has(ZAP_GOAL)}
+      <SecondaryNavItem
+        {replaceState}
+        href={notesPath}
+        notification={$notifications.has(notesPath)}>
+        <Icon icon={NotesMinimalistic} /> Notes
+      </SecondaryNavItem>
+      <SecondaryNavItem
+        {replaceState}
+        href={marketplacePath}
+        notification={$notifications.has(marketplacePath)}>
+        <Icon icon={ShopMinimalistic} /> Marketplace
+      </SecondaryNavItem>
+      {#if ENABLE_ZAPS}
         <SecondaryNavItem
           {replaceState}
-          href={goalsPath}
-          notification={$notifications.has(goalsPath)}>
-          <Icon icon={StarFallMinimalistic} /> Goals
+          href={fundraisingPath}
+          notification={$notifications.has(fundraisingPath)}>
+          <Icon icon={StarFallMinimalistic} /> Fundraising
         </SecondaryNavItem>
       {/if}
+      <SecondaryNavItem
+        {replaceState}
+        href={calendarPath}
+        notification={$notifications.has(calendarPath)}>
+        <Icon icon={CalendarMinimalistic} /> Calendar
+      </SecondaryNavItem>
       {#if $spaceKinds.has(THREAD)}
         <SecondaryNavItem
           {replaceState}
           href={threadsPath}
           notification={$notifications.has(threadsPath)}>
           <Icon icon={NotesMinimalistic} /> Threads
-        </SecondaryNavItem>
-      {/if}
-      {#if $spaceKinds.has(EVENT_TIME)}
-        <SecondaryNavItem
-          {replaceState}
-          href={calendarPath}
-          notification={$notifications.has(calendarPath)}>
-          <Icon icon={CalendarMinimalistic} /> Calendar
         </SecondaryNavItem>
       {/if}
       {#if hasNip29($relay)}

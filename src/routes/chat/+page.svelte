@@ -14,6 +14,8 @@
   import {chatSearch} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
+  import LogIn from "@app/components/LogIn.svelte"
+  import {pubkey} from "@welshman/app"
 
   let term = $state("")
 
@@ -28,49 +30,61 @@
   })
 </script>
 
-<div class="hidden min-h-screen md:hero">
-  <div class="col-2 hero-content text-center">
-    <p class="row-2 text-lg">
-      <Icon icon={InfoCircle} />
-      No conversation selected.
-    </p>
-    <p>
-      Click on a conversation in the sidebar, or <Button class="link" onclick={startChat}
-        >start a new one</Button
-      >.
-    </p>
+{#if !$pubkey}
+  <div class="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+    <div class="space-y-3">
+      <p class="text-lg font-semibold">Log in to view Activity</p>
+      <p class="opacity-70">
+        Activity is available for members only. Sign in to start or join conversations.
+      </p>
+    </div>
+    <Button class="btn btn-primary" onclick={() => pushModal(LogIn)}>Log in</Button>
   </div>
-</div>
+{:else}
+  <div class="hidden min-h-screen md:hero">
+    <div class="col-2 hero-content text-center">
+      <p class="row-2 text-lg">
+        <Icon icon={InfoCircle} />
+        No conversation selected.
+      </p>
+      <p>
+        Click on a conversation in the sidebar, or <Button class="link" onclick={startChat}
+          >start a new one</Button
+        >.
+      </p>
+    </div>
+  </div>
 
-<ContentSearch class="md:hidden">
-  {#snippet input()}
-    <div class="row-2 min-w-0 flex-grow items-center">
-      <label class="input input-bordered flex flex-grow items-center gap-2">
-        <Icon icon={Magnifier} />
-        <input
-          bind:value={term}
-          class="grow"
-          type="text"
-          placeholder="Search for conversations..." />
-      </label>
-      <Button class="btn btn-primary" onclick={openMenu}>
-        <Icon icon={MenuDots} />
-      </Button>
-    </div>
-  {/snippet}
-  {#snippet content()}
-    <div class="col-2">
-      {#each chats as { id, pubkeys, messages } (id)}
-        <ChatItem {id} {pubkeys} {messages} class="bg-alt card2" />
-      {:else}
-        <div class="py-20 max-w-sm col-4 items-center m-auto text-center">
-          <p>No chats found! Try starting one up.</p>
-          <Button class="btn btn-primary" onclick={startChat}>
-            <Icon icon={AddCircle} />
-            Start a Chat
-          </Button>
-        </div>
-      {/each}
-    </div>
-  {/snippet}
-</ContentSearch>
+  <ContentSearch class="md:hidden">
+    {#snippet input()}
+      <div class="row-2 min-w-0 flex-grow items-center">
+        <label class="input input-bordered flex flex-grow items-center gap-2">
+          <Icon icon={Magnifier} />
+          <input
+            bind:value={term}
+            class="grow"
+            type="text"
+            placeholder="Search for conversations..." />
+        </label>
+        <Button class="btn btn-primary" onclick={openMenu}>
+          <Icon icon={MenuDots} />
+        </Button>
+      </div>
+    {/snippet}
+    {#snippet content()}
+      <div class="col-2">
+        {#each chats as { id, pubkeys, messages } (id)}
+          <ChatItem {id} {pubkeys} {messages} class="bg-alt card2" />
+        {:else}
+          <div class="py-20 max-w-sm col-4 items-center m-auto text-center">
+            <p>No chats found! Try starting one up.</p>
+            <Button class="btn btn-primary" onclick={startChat}>
+              <Icon icon={AddCircle} />
+              Start a Chat
+            </Button>
+          </div>
+        {/each}
+      </div>
+    {/snippet}
+  </ContentSearch>
+{/if}

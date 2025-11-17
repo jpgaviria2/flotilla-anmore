@@ -121,6 +121,16 @@ export const makeFeed = ({
     },
   })
 
+  // Load initial events immediately
+  const $initialBuffer = get(buffer)
+  if ($initialBuffer.length > 0) {
+    // Take first 30 events and keep the rest in buffer
+    const initialEventsToShow = $initialBuffer.slice(0, 30)
+    const remainingBuffer = $initialBuffer.slice(30)
+    events.set(initialEventsToShow)
+    buffer.set(remainingBuffer)
+  }
+
   return {
     events,
     cleanup: () => {
@@ -247,19 +257,27 @@ export const makeCalendarFeed = ({
 
 // Domain specific
 
-export const loadAlerts = (pubkey: string) =>
-  request({
+export const loadAlerts = (pubkey: string) => {
+  if (!NOTIFIER_RELAY) {
+    return
+  }
+  return request({
     autoClose: true,
     relays: [NOTIFIER_RELAY],
     filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID], authors: [pubkey]}],
   })
+}
 
-export const loadAlertStatuses = (pubkey: string) =>
-  request({
+export const loadAlertStatuses = (pubkey: string) => {
+  if (!NOTIFIER_RELAY) {
+    return
+  }
+  return request({
     autoClose: true,
     relays: [NOTIFIER_RELAY],
     filters: [{kinds: [ALERT_STATUS], "#p": [pubkey]}],
   })
+}
 
 export const discoverRelays = (lists: List[]) =>
   Promise.all(

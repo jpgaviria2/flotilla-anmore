@@ -14,6 +14,7 @@
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInPassword from "@app/components/LogInPassword.svelte"
+  import LogInNsec from "@app/components/LogInNsec.svelte"
   import {pushModal, clearModals} from "@app/util/modal"
   import {PLATFORM_NAME, BURROW_URL} from "@app/core/state"
   import {pushToast} from "@app/util/toast"
@@ -76,6 +77,8 @@
 
   const loginWithBunker = () => pushModal(LogInBunker)
 
+  const loginWithNsec = () => pushModal(LogInNsec)
+
   const hasSigner = $derived(getNip07() || signers.length > 0)
 
   onMount(async () => {
@@ -92,8 +95,12 @@
     <Button class="link" onclick={() => pushModal(InfoNostr)}>nostr protocol</Button>, which allows
     you to own your social identity.
   </p>
+  <Button onclick={loginWithNsec} {disabled} class="btn btn-primary">
+    <Icon icon={Key} />
+    Log in with Private Key (nsec)
+  </Button>
   {#if getNip07()}
-    <Button {disabled} onclick={loginWithNip07} class="btn btn-primary">
+    <Button {disabled} onclick={loginWithNip07} class="btn btn-neutral">
       {#if loading === "nip07"}
         <span class="loading loading-spinner mr-3"></span>
       {:else}
@@ -103,7 +110,7 @@
     </Button>
   {/if}
   {#each signers as app}
-    <Button {disabled} class="btn btn-primary" onclick={() => loginWithNip55(app)}>
+    <Button {disabled} class="btn btn-neutral" onclick={() => loginWithNip55(app)}>
       {#if loading === "nip55"}
         <span class="loading loading-spinner mr-3"></span>
       {:else}
@@ -113,7 +120,7 @@
     </Button>
   {/each}
   {#if BURROW_URL && !hasSigner}
-    <Button {disabled} onclick={loginWithPassword} class="btn btn-primary">
+    <Button {disabled} onclick={loginWithPassword} class="btn btn-neutral">
       {#if loading === "password"}
         <span class="loading loading-spinner mr-3"></span>
       {:else}
@@ -125,7 +132,7 @@
   <Button
     onclick={loginWithBunker}
     {disabled}
-    class="btn {hasSigner || BURROW_URL ? 'btn-neutral' : 'btn-primary'}">
+    class="btn {hasSigner || BURROW_URL ? 'btn-neutral' : ''}">
     <Icon icon={Cpu} />
     Log in with Remote Signer
   </Button>

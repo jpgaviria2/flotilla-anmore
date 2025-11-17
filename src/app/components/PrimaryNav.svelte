@@ -1,28 +1,26 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {page} from "$app/stores"
   import {goto} from "$app/navigation"
-  import {splitAt} from "@welshman/lib"
-  import {userProfile, shouldUnwrap} from "@welshman/app"
-  import Widget from "@assets/icons/widget.svg?dataurl"
-  import Compass from "@assets/icons/compass.svg?dataurl"
-  import Letter from "@assets/icons/letter.svg?dataurl"
-  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
+  import {pubkey, userProfile} from "@welshman/app"
+  import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import ShopMinimalistic from "@assets/icons/shop-minimalistic.svg?dataurl"
+  import Wallet from "@assets/icons/wallet.svg?dataurl"
+  import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
+  import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
-  import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
-  import Settings from "@assets/icons/settings.svg?dataurl"
+  import LoginIcon from "@assets/icons/login-3.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Exit from "@assets/icons/logout-3.svg?dataurl"
+  import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
-  import ChatEnable from "@app/components/ChatEnable.svelte"
-  import MenuOtherSpaces from "@app/components/MenuOtherSpaces.svelte"
-  import MenuSettings from "@app/components/MenuSettings.svelte"
-  import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {userSpaceUrls, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
+  import LogIn from "@app/components/LogIn.svelte"
+  import SignUp from "@app/components/SignUp.svelte"
+  import LogOut from "@app/components/LogOut.svelte"
+  import {PLATFORM_LOGO, PLATFORM_NAME} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
-  import {makeSpacePath} from "@app/util/routes"
-  import {notifications} from "@app/util/notifications"
 
   type Props = {
     children?: Snippet
@@ -30,112 +28,102 @@
 
   const {children}: Props = $props()
 
-  const showOtherSpacesMenu = () => pushModal(MenuOtherSpaces, {urls: secondarySpaceUrls})
+  const primaryNavItems = [
+    {title: "Feed", href: "/home/feed", icon: NotesMinimalistic},
+    {title: "Marketplace", href: "/home/marketplace", icon: ShopMinimalistic},
+    {title: "Fundraising", href: "/home/fundraising", icon: Wallet},
+    {title: "Calendar", href: "/home/calendar", icon: CalendarMinimalistic},
+  ]
 
-  const showSettingsMenu = () => pushModal(MenuSettings)
+  const openLogin = () => pushModal(LogIn)
+  const openSignUp = () => pushModal(SignUp)
+  const openLogOut = () => pushModal(LogOut)
 
-  const openChat = () => ($shouldUnwrap ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
-
-  const hasNotification = (url: string) => {
-    const path = makeSpacePath(url)
-
-    return !$page.url.pathname.startsWith(path) && $notifications.has(path)
-  }
-
-  let windowHeight = $state(0)
-
-  const itemHeight = 56
-  const navPadding = 6 * itemHeight
-  const itemLimit = $derived((windowHeight - navPadding) / itemHeight)
-  const [primarySpaceUrls, secondarySpaceUrls] = $derived(splitAt(itemLimit, $userSpaceUrls))
-  const anySpaceNotifications = $derived($userSpaceUrls.some(hasNotification))
-  const otherSpaceNotifications = $derived(secondarySpaceUrls.some(hasNotification))
+  const goToHome = () => goto("/home/feed")
+  const goToSettings = () => goto("/settings/profile")
 </script>
 
-<svelte:window bind:innerHeight={windowHeight} />
-
 <div
-  class="ml-sai mt-sai mb-sai relative z-nav hidden w-14 flex-shrink-0 bg-base-200 pt-4 md:block">
-  <div class="flex h-full flex-col" class:justify-between={PLATFORM_RELAYS.length === 0}>
-    <div>
-      {#each PLATFORM_RELAYS as url (url)}
-        <PrimaryNavItemSpace {url} />
-      {:else}
-        <PrimaryNavItem title="Home" href="/home" class="tooltip-right">
-          <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" />
-        </PrimaryNavItem>
-        <Divider />
-        {#each primarySpaceUrls as url (url)}
-          <PrimaryNavItemSpace {url} />
-        {/each}
-        {#if secondarySpaceUrls.length > 0}
-          <PrimaryNavItem
-            title="Other Spaces"
-            class="tooltip-right"
-            onclick={showOtherSpacesMenu}
-            notification={otherSpaceNotifications}>
-            <ImageIcon alt="Other Spaces" src={Widget} />
-          </PrimaryNavItem>
-        {/if}
-        <PrimaryNavItem title="Add a Space" href="/discover" class="tooltip-right">
-          <ImageIcon alt="Add a Space" src={Compass} size={7} />
+  class="ml-sai mt-sai mb-sai relative z-nav hidden w-16 flex-shrink-0 bg-base-200 pt-4 md:block">
+  <div class="flex h-full flex-col items-center gap-4">
+    <button title={PLATFORM_NAME} class="tooltip-right" onclick={goToHome}>
+      <ImageIcon alt={PLATFORM_NAME} src={PLATFORM_LOGO || HomeSmile} class="rounded-full" />
+    </button>
+    <Divider />
+    <div class="flex flex-col items-center gap-2">
+      {#each primaryNavItems as item (item.href)}
+        <PrimaryNavItem title={item.title} href={item.href} class="tooltip-right">
+          <ImageIcon alt={item.title} src={item.icon} size={7} />
         </PrimaryNavItem>
       {/each}
+      {#if $pubkey}
+        <PrimaryNavItem title="Activity" href="/chat" class="tooltip-right">
+          <ImageIcon alt="Activity" src={ChatRound} size={7} />
+        </PrimaryNavItem>
+      {/if}
     </div>
-    {#if PLATFORM_RELAYS.length > 0}
-      <Divider />
-    {/if}
-    <div>
-      <PrimaryNavItem
-        title="Settings"
-        href="/settings/profile"
-        prefix="/settings"
-        class="tooltip-right">
-        <ImageIcon alt="Settings" src={$userProfile?.picture || UserRounded} class="rounded-full" />
-      </PrimaryNavItem>
-      <PrimaryNavItem
-        title="Messages"
-        onclick={openChat}
-        class="tooltip-right"
-        notification={$notifications.has("/chat")}>
-        <ImageIcon alt="Messages" src={Letter} size={7} />
-      </PrimaryNavItem>
-      <PrimaryNavItem title="Search" href="/people" class="tooltip-right">
-        <ImageIcon alt="Search" src={Magnifier} size={7} />
-      </PrimaryNavItem>
+    <Divider />
+    <div class="flex flex-col items-center gap-2">
+      {#if $pubkey}
+        <PrimaryNavItem
+          title="Profile & Settings"
+          href="/settings/profile"
+          prefix="/settings"
+          class="tooltip-right">
+          <ImageIcon
+            alt="Settings"
+            src={$userProfile?.picture || SettingsMinimalistic}
+            size={7}
+            class="rounded-full" />
+        </PrimaryNavItem>
+        <PrimaryNavItem title="Log out" onclick={openLogOut} class="tooltip-right">
+          <ImageIcon alt="Log out" src={Exit} size={7} />
+        </PrimaryNavItem>
+      {:else}
+        <PrimaryNavItem title="Log in" onclick={openLogin} class="tooltip-right">
+          <ImageIcon alt="Log in" src={LoginIcon} size={7} />
+        </PrimaryNavItem>
+        <PrimaryNavItem title="Sign up" onclick={openSignUp} class="tooltip-right">
+          <ImageIcon alt="Sign up" src={AddCircle} size={7} />
+        </PrimaryNavItem>
+      {/if}
     </div>
   </div>
 </div>
 
 {@render children?.()}
 
-<!-- a little extra something for ios -->
+<!-- Mobile navigation -->
 <div class="fixed bottom-0 left-0 right-0 z-nav h-[var(--saib)] bg-base-100 md:hidden"></div>
 <div
-  class="border-top bottom-sai fixed left-0 right-0 z-nav h-14 border border-base-200 bg-base-100 md:hidden">
-  <div class="content-padding-x content-sizing flex justify-between px-2">
-    <div class="flex gap-2 sm:gap-6">
-      <PrimaryNavItem title="Home" href="/home">
-        <ImageIcon alt="Home" src={HomeSmile} size={7} />
-      </PrimaryNavItem>
-      <PrimaryNavItem
-        title="Messages"
-        onclick={openChat}
-        notification={$notifications.has("/chat")}>
-        <ImageIcon alt="Messages" src={Letter} size={7} />
-      </PrimaryNavItem>
-      {#if PLATFORM_RELAYS.length !== 1}
-        <PrimaryNavItem title="Spaces" href="/spaces" notification={anySpaceNotifications}>
-          <ImageIcon alt="Spaces" src={SettingsMinimalistic} size={7} />
+  class="border-top bottom-sai fixed left-0 right-0 z-nav h-16 border border-base-200 bg-base-100 md:hidden">
+  <div class="flex items-center justify-between px-4">
+    <div class="flex flex-1 justify-around">
+      {#each primaryNavItems as item (item.href)}
+        <PrimaryNavItem title={item.title} href={item.href}>
+          <ImageIcon alt={item.title} src={item.icon} size={7} />
+        </PrimaryNavItem>
+      {/each}
+      {#if $pubkey}
+        <PrimaryNavItem title="Activity" href="/chat">
+          <ImageIcon alt="Activity" src={ChatRound} size={7} />
         </PrimaryNavItem>
       {/if}
     </div>
-    <PrimaryNavItem title="Settings" onclick={showSettingsMenu}>
-      <ImageIcon
-        alt="Settings"
-        src={$userProfile?.picture || Settings}
-        size={7}
-        class="rounded-full" />
-    </PrimaryNavItem>
+    <div class="flex items-center gap-2">
+      {#if $pubkey}
+        <PrimaryNavItem title="Profile" onclick={goToSettings}>
+          <ImageIcon
+            alt="Profile"
+            src={$userProfile?.picture || UserRounded}
+            size={7}
+            class="rounded-full" />
+        </PrimaryNavItem>
+      {:else}
+        <PrimaryNavItem title="Log in" onclick={openLogin}>
+          <ImageIcon alt="Log in" src={LoginIcon} size={7} />
+        </PrimaryNavItem>
+      {/if}
+    </div>
   </div>
 </div>

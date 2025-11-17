@@ -2,13 +2,12 @@
   import type {Snippet} from "svelte"
   import {page} from "$app/stores"
   import {pubkey} from "@welshman/app"
-  import Landing from "@app/components/Landing.svelte"
   import Toast from "@app/components/Toast.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
   import EmailConfirm from "@app/components/EmailConfirm.svelte"
   import PasswordReset from "@app/components/PasswordReset.svelte"
   import {BURROW_URL} from "@app/core/state"
-  import {modals, pushModal} from "@app/util/modal"
+  import {pushModal} from "@app/util/modal"
 
   interface Props {
     children: Snippet
@@ -34,12 +33,8 @@
 </script>
 
 <div class="flex h-screen overflow-hidden">
-  {#if $pubkey}
-    <PrimaryNav>
-      {@render children?.()}
-    </PrimaryNav>
-  {:else if !$modals[$page.url.hash.slice(1)]}
-    <Landing />
-  {/if}
+  <PrimaryNav>
+    {@render children?.()}
+  </PrimaryNav>
 </div>
 <Toast />
