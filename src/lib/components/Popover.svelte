@@ -28,7 +28,7 @@
 <svelte:window onmouseup={onMouseUp} onkeydown={onKeyDown} />
 
 <div class="relative w-full" bind:this={element}>
-  <div transition:fly|local class="absolute z-popover w-full">
+  <div transition:fly|local class="absolute z-popover w-full rounded-box bg-base-100 shadow-md">
     {@render children?.()}
   </div>
 </div>

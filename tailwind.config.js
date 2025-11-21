@@ -31,18 +31,18 @@ export default {
       {
         dark: {
           ...themes["dark"],
-          primary: process.env.VITE_PLATFORM_ACCENT,
+          primary: process.env.VITE_PLATFORM_ACCENT || themes["dark"].primary,
           "primary-content": process.env.VITE_PLATFORM_ACCENT_CONTENT || "#EAE7FF",
-          secondary: process.env.VITE_PLATFORM_SECONDARY,
+          secondary: process.env.VITE_PLATFORM_SECONDARY || themes["dark"].secondary,
           "secondary-content": process.env.VITE_PLATFORM_SECONDARY_CONTENT || "#EAE7FF",
         },
         light: {
           ...themes["winter"],
           neutral: "#F2F7FF",
           warning: "#FD8D0B",
-          primary: process.env.VITE_PLATFORM_ACCENT,
+          primary: process.env.VITE_PLATFORM_ACCENT || themes["winter"].primary,
           "primary-content": process.env.VITE_PLATFORM_ACCENT_CONTENT || "#EAE7FF",
-          secondary: process.env.VITE_PLATFORM_SECONDARY,
+          secondary: process.env.VITE_PLATFORM_SECONDARY || themes["winter"].secondary,
           "secondary-content": process.env.VITE_PLATFORM_SECONDARY_CONTENT || "#EAE7FF",
         },
       },
