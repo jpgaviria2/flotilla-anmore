@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
   import {writable, get} from "svelte/store"
   import {fly} from "@lib/transition"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -7,26 +6,19 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
+  import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {pushModal} from "@app/util/modal"
   import {ANMORE_RELAY} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {THREAD} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {pubkey} from "@welshman/app"
 
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)
   const feedEventsStore = writable<TrustedEvent[]>([])
   let feedController: ReturnType<typeof makeFeed> | null = null
 
-  const openActivity = () => {
-    if ($pubkey) {
-      goto("/chat")
-    } else {
-      pushModal(LogIn)
-    }
-  }
+  const createThread = () => pushModal(ThreadCreate, {url: ANMORE_RELAY})
 
   $effect(() => {
     if (element) {
@@ -83,9 +75,9 @@
   <div
     class="flex items-center justify-between border-b border-base-300 bg-base-100 p-4 md:px-6 lg:px-8">
     <h2 class="text-xl font-semibold md:text-2xl">Feed</h2>
-    <Button class="btn btn-primary btn-sm md:btn-md" onclick={openActivity}>
+    <Button class="btn btn-primary btn-sm md:btn-md" onclick={createThread}>
       <Icon icon={AddCircle} />
-      Open Activity
+      New Thread
     </Button>
   </div>
   <div bind:this={element} class="flex-1 overflow-auto">
