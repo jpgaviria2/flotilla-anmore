@@ -1,7 +1,7 @@
 import {get} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {bytesToHex} from "@welshman/lib"
-import {handlesByNip05} from "@welshman/app"
+import {handlesByNip05, profilesByPubkey} from "@welshman/app"
 
 const verificationCache = new Map<string, boolean>()
 
@@ -133,6 +133,19 @@ export const verifyNip05Domain = async (nip05: string, pubkey: string): Promise<
     verificationCache.set(cacheKey, false)
     return false
   }
+}
+
+/**
+ * Checks if a pubkey has a NIP-5 address ending with @anmore.me
+ * This is a synchronous check based on the profile's nip05 field.
+ * Does not verify the domain - only checks if the nip05 field ends with @anmore.me
+ */
+export const hasAnmoreMeNip05 = (pubkey: string): boolean => {
+  const profile = profilesByPubkey.get().get(pubkey)
+  if (!profile?.nip05) {
+    return false
+  }
+  return profile.nip05.toLowerCase().endsWith("@anmore.me")
 }
 
 /**

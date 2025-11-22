@@ -1,7 +1,10 @@
 <script lang="ts">
-  import {writable, get} from "svelte/store"
+  import {writable, get, derived} from "svelte/store"
   import {fly} from "@lib/transition"
+  import {sortBy, partition} from "@welshman/lib"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Eye from "@assets/icons/eye.svg?dataurl"
+  import EyeClosed from "@assets/icons/eye-closed.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -12,13 +15,50 @@
   import {makeFeed} from "@app/core/requests"
   import {THREAD} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
+  import {profilesByPubkey} from "@welshman/app"
 
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)
+  let showUnverified = $state(false)
   const feedEventsStore = writable<TrustedEvent[]>([])
   let feedController: ReturnType<typeof makeFeed> | null = null
 
   const createThread = () => pushModal(ThreadCreate, {url: ANMORE_RELAY})
+
+  // Use derived to reactively track events, profiles, and toggle state
+  // Make showUnverified a writable store so it's properly reactive
+  const showUnverifiedStore = writable(false)
+
+  // Sync state variable with store whenever it changes
+  $effect(() => {
+    showUnverifiedStore.set(showUnverified)
+  })
+
+  // Use derived to reactively track events, profiles, and toggle state
+  const sortedEventsStore = derived(
+    [feedEventsStore, profilesByPubkey, showUnverifiedStore],
+    ([$events, $profilesByPubkey, $showUnverified]) => {
+      const [verifiedEvents, unverifiedEvents] = partition((event: TrustedEvent) => {
+        const profile = $profilesByPubkey.get(event.pubkey)
+        if (!profile?.nip05) {
+          return false
+        }
+        return profile.nip05.toLowerCase().endsWith("@anmore.me")
+      }, $events)
+
+      // Sort each group by created_at in descending order (newest first)
+      const sortedVerified = sortBy(e => -e.created_at, verifiedEvents)
+      const sortedUnverified = sortBy(e => -e.created_at, unverifiedEvents)
+
+      // If filter is OFF (showUnverified is true), show verified first, then unverified at bottom
+      // If filter is ON (showUnverified is false), only show verified
+      if ($showUnverified) {
+        return [...sortedVerified, ...sortedUnverified]
+      } else {
+        return sortedVerified
+      }
+    },
+  )
 
   $effect(() => {
     if (element) {
@@ -75,14 +115,25 @@
   <div
     class="flex items-center justify-between border-b border-base-300 bg-base-100 p-4 md:px-6 lg:px-8">
     <h2 class="text-xl font-semibold md:text-2xl">Feed</h2>
-    <Button class="btn btn-primary btn-sm md:btn-md" onclick={createThread}>
-      <Icon icon={AddCircle} />
-      New Thread
-    </Button>
+    <div class="flex items-center gap-2">
+      <Button
+        class="btn btn-neutral btn-sm md:btn-md"
+        onclick={() => {
+          showUnverified = !showUnverified
+          showUnverifiedStore.set(showUnverified)
+        }}>
+        <Icon icon={showUnverified ? EyeClosed : Eye} />
+        {showUnverified ? "Hide unverified" : "Show unverified"}
+      </Button>
+      <Button class="btn btn-primary btn-sm md:btn-md" onclick={createThread}>
+        <Icon icon={AddCircle} />
+        New Thread
+      </Button>
+    </div>
   </div>
   <div bind:this={element} class="flex-1 overflow-auto">
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 md:max-w-4xl lg:max-w-5xl lg:p-8">
-      {#each $feedEventsStore as event (event.id)}
+      {#each $sortedEventsStore as event (event.id)}
         <div in:fly>
           <ThreadItem url={ANMORE_RELAY} event={$state.snapshot(event)} />
         </div>
@@ -91,7 +142,7 @@
         <p class="flex h-10 items-center justify-center py-20" transition:fly>
           <Spinner {loading}>Loading feed...</Spinner>
         </p>
-      {:else if $feedEventsStore.length === 0}
+      {:else if $sortedEventsStore.length === 0}
         <p class="flex h-10 items-center justify-center py-20" transition:fly>No threads found.</p>
       {:else}
         <p class="flex h-10 items-center justify-center py-20" transition:fly>That's all!</p>
