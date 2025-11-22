@@ -25,7 +25,9 @@ export default defineConfig({
       manifest: {
         name: process.env.VITE_PLATFORM_NAME,
         short_name: process.env.VITE_PLATFORM_NAME,
-        theme_color: process.env.VITE_PLATFORM_ACCENT,
+        theme_color: process.env.VITE_PLATFORM_ACCENT?.startsWith('#') 
+          ? process.env.VITE_PLATFORM_ACCENT 
+          : `#${process.env.VITE_PLATFORM_ACCENT}`,
         description: process.env.VITE_PLATFORM_DESCRIPTION,
         // @ts-ignore
         permissions: ["clipboardRead", "clipboardWrite", "unlimitedStorage"],

@@ -1,15 +1,22 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
-  import {removeUndefined} from "@welshman/lib"
+  import {removeUndefined, call} from "@welshman/lib"
   import {displayPubkey} from "@welshman/util"
-  import {deriveHandleForPubkey, displayHandle, deriveProfileDisplay} from "@welshman/app"
+  import {
+    deriveHandleForPubkey,
+    displayHandle,
+    deriveProfileDisplay,
+    deriveProfile,
+  } from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import WotScore from "@app/components/WotScore.svelte"
+  import VerifiedIcon from "@app/components/VerifiedIcon.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {pushModal} from "@app/util/modal"
   import {clip} from "@app/util/toast"
+  import {isNip05Verified} from "@app/util/verification"
   import Copy from "@assets/icons/copy.svg?dataurl"
 
   type Props = {
@@ -23,7 +30,15 @@
 
   const relays = removeUndefined([url])
   const profileDisplay = deriveProfileDisplay(pubkey, relays)
+  const profile = deriveProfile(pubkey, relays)
   const handle = deriveHandleForPubkey(pubkey)
+  let isVerified = $state(false)
+
+  $effect(() => {
+    call(async () => {
+      isVerified = await isNip05Verified(pubkey, $profile?.nip05)
+    })
+  })
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
 
@@ -39,6 +54,7 @@
       <Button onclick={openProfile} class="text-bold overflow-hidden text-ellipsis">
         {$profileDisplay}
       </Button>
+      <VerifiedIcon {isVerified} />
       <WotScore {pubkey} />
     </div>
     {#if $handle}

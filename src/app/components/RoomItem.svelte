@@ -1,6 +1,13 @@
 <script lang="ts">
   import cx from "classnames"
-  import {hash, now, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
+  import {
+    hash,
+    now,
+    displayList,
+    formatTimestampAsTime,
+    formatTimestampAsDate,
+    call,
+  } from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {MESSAGE, COMMENT} from "@welshman/util"
   import {
@@ -9,6 +16,7 @@
     mergeThunks,
     deriveProfileDisplay,
     displayProfileByPubkey,
+    deriveProfile,
   } from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -21,7 +29,9 @@
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import VerifiedIcon from "@app/components/VerifiedIcon.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
+  import {isNip05Verified} from "@app/util/verification"
   import RoomItemZapButton from "@app/components/RoomItemZapButton.svelte"
   import RoomItemEmojiButton from "@app/components/RoomItemEmojiButton.svelte"
   import RoomItemMenuButton from "@app/components/RoomItemMenuButton.svelte"
@@ -56,9 +66,17 @@
   const shouldProtect = canEnforceNip70(url)
   const today = formatTimestampAsDate(now())
   const profileDisplay = deriveProfileDisplay(event.pubkey, [url])
+  const profile = deriveProfile(event.pubkey, [url])
   const thunk = mergeThunks($thunks.filter(t => t.event.id === event.id))
   const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
   const comments = deriveEventsForUrl(url, [{kinds: [COMMENT], "#e": [event.id]}])
+  let isVerified = $state(false)
+
+  $effect(() => {
+    call(async () => {
+      isVerified = await isNip05Verified(event.pubkey, $profile?.nip05)
+    })
+  })
 
   const reply = () => replyTo!(event)
   const edit = canEdit(event) ? () => onEdit(event) : undefined
@@ -95,6 +113,7 @@
           <Button onclick={openProfile} class="text-sm font-bold" style="color: {colorValue}">
             {$profileDisplay}
           </Button>
+          <VerifiedIcon {isVerified} />
           <span class="text-xs opacity-50">
             {#if formatTimestampAsDate(event.created_at) === today}
               Today

@@ -1,8 +1,15 @@
 <script lang="ts">
   import {type Instance} from "tippy.js"
-  import {hash, formatTimestampAsTime} from "@welshman/lib"
+  import {hash, formatTimestampAsTime, call} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {thunks, mergeThunks, pubkey, deriveProfileDisplay, sendWrapped} from "@welshman/app"
+  import {
+    thunks,
+    mergeThunks,
+    pubkey,
+    deriveProfileDisplay,
+    deriveProfile,
+    sendWrapped,
+  } from "@welshman/app"
   import {isMobile} from "@lib/html"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -10,10 +17,12 @@
   import Tippy from "@lib/components/Tippy.svelte"
   import TapTarget from "@lib/components/TapTarget.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import VerifiedIcon from "@app/components/VerifiedIcon.svelte"
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
+  import {isNip05Verified} from "@app/util/verification"
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
   import {colors} from "@app/core/state"
@@ -31,8 +40,16 @@
 
   const isOwn = event.pubkey === $pubkey
   const profileDisplay = deriveProfileDisplay(event.pubkey)
+  const profile = deriveProfile(event.pubkey)
   const thunk = mergeThunks($thunks.filter(t => t.event.id === event.id))
   const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
+  let isVerified = $state(false)
+
+  $effect(() => {
+    call(async () => {
+      isVerified = await isNip05Verified(event.pubkey, $profile?.nip05)
+    })
+  })
 
   const reply = () => replyTo(event)
 
@@ -107,6 +124,7 @@
                 <Button onclick={openProfile} class="text-sm font-bold" style="color: {colorValue}">
                   {$profileDisplay}
                 </Button>
+                <VerifiedIcon {isVerified} />
               </div>
             </Button>
           {/if}
