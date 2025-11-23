@@ -1,14 +1,18 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'social.flotilla',
+  appId: 'com.flotilla.anmore',
   appName: 'Flotilla',
-  webDir: 'build'
+  webDir: 'build',
   server: {
     androidScheme: "https"
   },
   android: {
     adjustMarginsForEdgeToEdge: false,
+  },
+  ios: {
+    scrollEnabled: true,
+    contentInset: "automatic",
   },
   plugins: {
     SplashScreen: {

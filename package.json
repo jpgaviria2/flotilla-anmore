@@ -7,6 +7,7 @@
     "build": "./build.sh",
     "sourcemaps": "./build.sh && ./sourcemaps.sh",
     "release:android": "./build.sh && cap build android --androidreleasetype APK --signing-type apksigner",
+    "release:ios": "./ios-build.sh",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check src && eslint src",

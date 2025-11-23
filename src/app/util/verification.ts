@@ -2,6 +2,7 @@ import {get} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {bytesToHex} from "@welshman/lib"
 import {handlesByNip05, profilesByPubkey} from "@welshman/app"
+import {CapacitorHttp, Capacitor} from "@capacitor/core"
 
 const verificationCache = new Map<string, boolean>()
 
@@ -30,23 +31,66 @@ export const verifyNip05Domain = async (nip05: string, pubkey: string): Promise<
   console.log("verifyNip05Domain: Fetching", url)
 
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-      signal: AbortSignal.timeout(10000), // 10 second timeout
-    })
+    let data: any
+    
+    // Use CapacitorHttp for iOS (bypasses WebView fetch limitations)
+    // Use fetch for PWA/web (works fine in browsers)
+    if (Capacitor.getPlatform() === "ios") {
+      console.log("verifyNip05Domain: Using CapacitorHttp for iOS")
+      
+      // CapacitorHttp doesn't support AbortSignal, so we use Promise.race with timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Request timeout")), 10000)
+      })
+      
+      const httpPromise = CapacitorHttp.get({
+        url: url,
+        headers: {
+          Accept: "application/json",
+        },
+      })
+      
+      const response = await Promise.race([httpPromise, timeoutPromise])
+      
+      console.log("verifyNip05Domain: Response status:", response.status)
+      
+      if (response.status < 200 || response.status >= 300) {
+        console.log("verifyNip05Domain: Response not OK")
+        verificationCache.set(cacheKey, false)
+        return false
+      }
+      
+      data = response.data
+    } else {
+      // Use standard fetch for PWA/web
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        controller.abort()
+      }, 10000) // 10 second timeout
+      
+      const fetchPromise = fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+        signal: controller.signal,
+      })
+      
+      // Ensure timeout is cleared if fetch succeeds
+      const response = await fetchPromise.finally(() => {
+        clearTimeout(timeoutId)
+      })
 
-    console.log("verifyNip05Domain: Response status:", response.status)
+      console.log("verifyNip05Domain: Response status:", response.status)
 
-    if (!response.ok) {
-      console.log("verifyNip05Domain: Response not OK")
-      verificationCache.set(cacheKey, false)
-      return false
+      if (!response.ok) {
+        console.log("verifyNip05Domain: Response not OK")
+        verificationCache.set(cacheKey, false)
+        return false
+      }
+
+      data = await response.json()
     }
-
-    const data = await response.json()
     console.log("verifyNip05Domain: Response data:", data)
 
     // NIP-5 spec: check data.names[name] (the part before @) matches the pubkey
@@ -123,13 +167,38 @@ export const verifyNip05Domain = async (nip05: string, pubkey: string): Promise<
     verificationCache.set(cacheKey, verified)
     return verified
   } catch (error) {
-    console.error("verifyNip05Domain: Error:", error)
-    // Don't cache network errors (CORS, timeouts, etc.) - these will work in production
+    // Better error logging for iOS WebView
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorName = error instanceof Error ? error.name : typeof error
+    console.error("verifyNip05Domain: Error:", {
+      name: errorName,
+      message: errorMessage,
+      error: error,
+    })
+    
+    // Don't cache network errors (CORS, timeouts, load failures, etc.) - these may work later
     // Only cache actual verification failures (wrong pubkey, etc.)
-    if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
-      console.log("verifyNip05Domain: Network error (likely CORS), not caching")
+    // Handle various network error messages across platforms
+    const isNetworkError = 
+      (error instanceof TypeError && (
+        errorMessage.includes("Failed to fetch") || 
+        errorMessage.includes("Load failed") ||
+        errorMessage.includes("NetworkError") ||
+        errorMessage.includes("Network request failed")
+      )) ||
+      (error instanceof Error && error.name === "NetworkError")
+    
+    if (isNetworkError) {
+      console.log("verifyNip05Domain: Network error detected, not caching:", errorMessage)
       return false
     }
+    
+    // Handle abort errors (timeouts)
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log("verifyNip05Domain: Request timeout, not caching")
+      return false
+    }
+    
     verificationCache.set(cacheKey, false)
     return false
   }

@@ -24,6 +24,29 @@ If you're deploying a custom version of flotilla, be sure to remove the `plausib
 
 See [./CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Mobile Apps
+
+### iOS
+
+To build the iOS app, see [./IOS_BUILD.md](IOS_BUILD.md) for detailed instructions.
+
+Quick start:
+```sh
+pnpm install
+pnpm run release:ios
+# Or use the helper script directly:
+# ./ios-build.sh
+```
+
+The script will build the web app, sync with Capacitor, install CocoaPods dependencies, and open Xcode automatically.
+
+### Android
+
+To build the Android app, use:
+```sh
+pnpm run release:android
+```
+
 ## Deployment
 
 To run your own Flotilla, it's as simple as:

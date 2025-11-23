@@ -6,7 +6,7 @@ Flotilla is a svelte/typescript/capacitor project. It's intended to be an altern
 
 ## Getting Started
 
-Run `pnpm run dev` to get a dev server, and `pnpm run check:watch` to watch for typescript errors. When you're ready to commit, a pre-commit hook will run to lint and typecheck your work. To run the project on Android or iOS, use Android Studio or Xcode.
+Run `pnpm run dev` to get a dev server, and `pnpm run check:watch` to watch for typescript errors. When you're ready to commit, a pre-commit hook will run to lint and typecheck your work. To run the project on Android or iOS, use Android Studio or Xcode. For detailed iOS build instructions, see [IOS_BUILD.md](./IOS_BUILD.md).
 
 The `master` branch is automatically deployed to production, so always work on feature branches based on the `dev` branch. This project frequently uses unreleased versions of [welshman](https://welshman.coracle.social), using `pnpm` link to hotlink a local copy of the code. To set that up, clone welshman to the parent directory of your `coracle` client, then add `link:../welshman/packages/packagename` to the `pnpm.overrides` section of your `package.json`. Below is a nodejs script that will do that automatically for you:
 
