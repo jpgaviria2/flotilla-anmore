@@ -8,14 +8,16 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {onMount} from "svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
+  import SignUp from "@app/components/SignUp.svelte"
   import {pushModal} from "@app/util/modal"
   import {ANMORE_RELAY} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {THREAD} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {profilesByPubkey} from "@welshman/app"
+  import {profilesByPubkey, pubkey} from "@welshman/app"
 
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)
@@ -23,7 +25,20 @@
   const feedEventsStore = writable<TrustedEvent[]>([])
   let feedController: ReturnType<typeof makeFeed> | null = null
 
-  const createThread = () => pushModal(ThreadCreate, {url: ANMORE_RELAY})
+  const createThread = () => {
+    if ($pubkey) {
+      pushModal(ThreadCreate, {url: ANMORE_RELAY})
+    } else {
+      pushModal(SignUp)
+    }
+  }
+
+  // Redirect to signup if not authenticated
+  onMount(() => {
+    if (!$pubkey) {
+      pushModal(SignUp)
+    }
+  })
 
   // Use derived to reactively track events, profiles, and toggle state
   // Make showUnverified a writable store so it's properly reactive

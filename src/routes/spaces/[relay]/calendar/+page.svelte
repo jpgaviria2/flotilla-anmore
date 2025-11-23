@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate} from "@welshman/lib"
@@ -18,10 +19,15 @@
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import CalendarGrid from "@app/components/CalendarGrid.svelte"
   import {pushModal} from "@app/util/modal"
-  import {decodeRelay, makeCommentFilter} from "@app/core/state"
+  import {decodeRelay, ANMORE_RELAY, makeCommentFilter} from "@app/core/state"
   import {makeCalendarFeed} from "@app/core/requests"
 
   const url = decodeRelay($page.params.relay!)
+
+  // Redirect to root /calendar for ANMORE_RELAY (always relay.anmore.me)
+  if (url === ANMORE_RELAY) {
+    goto("/calendar", {replaceState: true})
+  }
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})
 

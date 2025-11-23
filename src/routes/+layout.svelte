@@ -9,6 +9,9 @@
   import {Capacitor} from "@capacitor/core"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
+  import {onMount} from "svelte"
+  import LogIn from "@app/components/LogIn.svelte"
+  import {pushModal} from "@app/util/modal"
   import {sync} from "@welshman/store"
   import {call, spec} from "@welshman/lib"
   import {defaultSocketPolicies} from "@welshman/net"
@@ -106,6 +109,38 @@
       console.warn("Failed to register Capacitor App listeners:", error)
     }
   }
+
+  // Handle return from nstart.me
+  onMount(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const key = urlParams.get("key")
+
+    if (key) {
+      const nsec = sessionStorage.getItem(key)
+
+      if (nsec) {
+        // Clean up URL
+        const cleanUrl = window.location.pathname
+        window.history.replaceState({}, "", cleanUrl)
+
+        // Show instructions
+        pushToast({
+          message: `Welcome back! You can now log in using your nsec key. Click "Log in" and paste your nsec key (starting with nsec1...) to access your account.`,
+          timeout: 8000,
+        })
+
+        // Optionally open login modal after a short delay
+        setTimeout(() => {
+          pushModal(LogIn)
+        }, 2000)
+
+        // Clean up sessionStorage after showing the message
+        sessionStorage.removeItem(key)
+        sessionStorage.removeItem(`${key}_email`)
+        sessionStorage.removeItem(`${key}_npub`)
+      }
+    }
+  })
 
   const unsubscribe = call(async () => {
     const unsubscribers: Unsubscriber[] = []

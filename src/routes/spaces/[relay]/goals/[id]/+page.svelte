@@ -22,11 +22,18 @@
   import GoalActions from "@app/components/GoalActions.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import {deriveEvent, decodeRelay} from "@app/core/state"
+  import {goto} from "$app/navigation"
+  import {deriveEvent, decodeRelay, ANMORE_RELAY} from "@app/core/state"
   import {setChecked} from "@app/util/notifications"
 
   const {relay, id} = $page.params as MakeNonOptional<typeof $page.params>
   const url = decodeRelay(relay)
+
+  // Redirect to root /fundraising/[id] for ANMORE_RELAY (always relay.anmore.me)
+  if (url === ANMORE_RELAY) {
+    goto(`/fundraising/${id}`, {replaceState: true})
+  }
+
   const event = deriveEvent(id)
   const filters = [{kinds: [COMMENT], "#E": [id]}]
   const replies = deriveEvents(repository, {filters})

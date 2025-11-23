@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
@@ -24,7 +25,20 @@
   import RoomCompose from "@app/components/RoomCompose.svelte"
   import RoomComposeEdit from "@src/app/components/RoomComposeEdit.svelte"
   import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
-  import {userSettingsValues, decodeRelay, PROTECTED, MESSAGE_KINDS} from "@app/core/state"
+  import {
+    userSettingsValues,
+    decodeRelay,
+    ANMORE_RELAY,
+    PROTECTED,
+    MESSAGE_KINDS,
+  } from "@app/core/state"
+
+  const url = decodeRelay($page.params.relay!)
+
+  // Redirect to root /feed for ANMORE_RELAY (always relay.anmore.me)
+  if (url === ANMORE_RELAY) {
+    goto("/feed", {replaceState: true})
+  }
   import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
@@ -33,7 +47,6 @@
 
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
-  const url = decodeRelay($page.params.relay!)
   const shouldProtect = canEnforceNip70(url)
 
   const replyTo = (event: TrustedEvent) => {

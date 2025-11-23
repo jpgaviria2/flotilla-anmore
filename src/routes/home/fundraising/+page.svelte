@@ -11,7 +11,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
+  import SignUp from "@app/components/SignUp.svelte"
   import {pushModal} from "@app/util/modal"
   import {ANMORE_RELAY} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
@@ -23,9 +23,16 @@
     if ($pubkey) {
       pushModal(GoalCreate, {url: ANMORE_RELAY})
     } else {
-      pushModal(LogIn)
+      pushModal(SignUp)
     }
   }
+
+  // Redirect to signup if not authenticated
+  onMount(() => {
+    if (!$pubkey) {
+      pushModal(SignUp)
+    }
+  })
 
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)

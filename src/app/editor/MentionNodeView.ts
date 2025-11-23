@@ -11,7 +11,7 @@ export const makeMentionNodeView =
     dom.classList.add("tiptap-object")
 
     const unsubDisplay = display.subscribe($display => {
-      dom.textContent = "@" + $display
+      dom.textContent = $display
     })
 
     return {

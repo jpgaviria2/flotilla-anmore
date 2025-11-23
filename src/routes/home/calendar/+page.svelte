@@ -16,7 +16,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
+  import SignUp from "@app/components/SignUp.svelte"
   import CalendarGrid from "@app/components/CalendarGrid.svelte"
   import {pushModal} from "@app/util/modal"
   import {ANMORE_RELAY, makeCommentFilter} from "@app/core/state"
@@ -27,9 +27,16 @@
     if ($pubkey) {
       pushModal(CalendarEventCreate, {url: ANMORE_RELAY})
     } else {
-      pushModal(LogIn)
+      pushModal(SignUp)
     }
   }
+
+  // Redirect to signup if not authenticated
+  onMount(() => {
+    if (!$pubkey) {
+      pushModal(SignUp)
+    }
+  })
 
   const getStart = (event: TrustedEvent) => parseInt(getTagValue("start", event.tags) || "")
 

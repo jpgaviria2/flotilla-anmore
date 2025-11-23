@@ -25,10 +25,26 @@ import {
   userSpaceUrls,
   hasNip29,
   ROOM,
+  ANMORE_RELAY,
 } from "@app/core/state"
 import {lastPageBySpaceUrl} from "@app/util/history"
 
 export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => {
+  // For ANMORE_RELAY, use root-level paths instead of /spaces structure
+  if (url === ANMORE_RELAY) {
+    if (extra.length === 0) {
+      return "/feed"
+    }
+    const route = extra[0]
+    const rest = extra
+      .slice(1)
+      .filter(identity)
+      .map(s => encodeURIComponent(s as string))
+    const basePath = route === "chat" || route === "notes" ? "/feed" : `/${route}`
+    return rest.length > 0 ? `${basePath}/${rest.join("/")}` : basePath
+  }
+
+  // For other relays (future multi-space support), use /spaces structure
   let path = `/spaces/${encodeRelay(url)}`
 
   if (extra.length > 0) {
@@ -44,6 +60,12 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
 }
 
 export const goToSpace = async (url: string) => {
+  // For ANMORE_RELAY, always go to /feed
+  if (url === ANMORE_RELAY) {
+    goto("/feed", {replaceState: true})
+    return
+  }
+
   const prevPath = lastPageBySpaceUrl.get(encodeRelay(url))
 
   if (prevPath) {
@@ -57,17 +79,41 @@ export const goToSpace = async (url: string) => {
 
 export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}`
 
-export const makeRoomPath = (url: string, h: string) => `/spaces/${encodeRelay(url)}/${h}`
+export const makeRoomPath = (url: string, h: string) => {
+  // For ANMORE_RELAY, rooms go to /feed (or could be /rooms/[h] in future)
+  if (url === ANMORE_RELAY) {
+    return `/feed` // Rooms not currently supported at root level, redirect to feed
+  }
+  return `/spaces/${encodeRelay(url)}/${h}`
+}
 
-export const makeSpaceChatPath = (url: string) => makeRoomPath(url, "chat")
+export const makeSpaceChatPath = (url: string) => {
+  if (url === ANMORE_RELAY) {
+    return "/feed"
+  }
+  return makeRoomPath(url, "chat")
+}
 
-export const makeGoalPath = (url: string, eventId?: string) => makeSpacePath(url, "goals", eventId)
+export const makeGoalPath = (url: string, eventId?: string) => {
+  if (url === ANMORE_RELAY) {
+    return eventId ? `/fundraising/${eventId}` : "/fundraising"
+  }
+  return makeSpacePath(url, "goals", eventId)
+}
 
-export const makeThreadPath = (url: string, eventId?: string) =>
-  makeSpacePath(url, "threads", eventId)
+export const makeThreadPath = (url: string, eventId?: string) => {
+  if (url === ANMORE_RELAY) {
+    return eventId ? `/feed/threads/${eventId}` : "/feed"
+  }
+  return makeSpacePath(url, "threads", eventId)
+}
 
-export const makeCalendarPath = (url: string, eventId?: string) =>
-  makeSpacePath(url, "calendar", eventId)
+export const makeCalendarPath = (url: string, eventId?: string) => {
+  if (url === ANMORE_RELAY) {
+    return eventId ? `/calendar/${eventId}` : "/calendar"
+  }
+  return makeSpacePath(url, "calendar", eventId)
+}
 
 export const getPrimaryNavItem = ($page: Page) => $page.route?.id?.split("/")[1]
 
@@ -126,6 +172,9 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
     }
 
     if (event.kind === MESSAGE) {
+      if (url === ANMORE_RELAY) {
+        return h ? `/feed` : "/feed" // Rooms redirect to feed for now
+      }
       return h ? makeRoomPath(url, h) : makeSpacePath(url, "chat")
     }
 
@@ -146,6 +195,9 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
       }
 
       if (parseInt(kind) === MESSAGE) {
+        if (url === ANMORE_RELAY) {
+          return h ? `/feed` : "/feed" // Rooms redirect to feed for now
+        }
         return h ? makeRoomPath(url, h) : makeSpacePath(url, "chat")
       }
     }

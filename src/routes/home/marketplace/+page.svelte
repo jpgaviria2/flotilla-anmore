@@ -1,19 +1,26 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {writable, derived} from "svelte/store"
+  import {goto} from "$app/navigation"
+  import {writable, derived, get} from "svelte/store"
   import {fly} from "@lib/transition"
   import {sortBy, partition} from "@welshman/lib"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Eye from "@assets/icons/eye.svg?dataurl"
   import EyeClosed from "@assets/icons/eye-closed.svg?dataurl"
+  import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import MarketplaceCreate from "@app/components/MarketplaceCreate.svelte"
-  import LogIn from "@app/components/LogIn.svelte"
+  import ProfileLink from "@app/components/ProfileLink.svelte"
+  import ChatEnable from "@app/components/ChatEnable.svelte"
+  import SignUp from "@app/components/SignUp.svelte"
+  import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {pushModal} from "@app/util/modal"
+  import {shouldUnwrap} from "@welshman/app"
   import {ANMORE_RELAY} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
+  import {makeChatPath} from "@app/util/routes"
   import type {TrustedEvent} from "@welshman/util"
   import {getTagValue} from "@welshman/util"
   import {tryCatch, parseJson} from "@welshman/lib"
@@ -23,9 +30,16 @@
     if ($pubkey) {
       pushModal(MarketplaceCreate, {url: ANMORE_RELAY})
     } else {
-      pushModal(LogIn)
+      pushModal(SignUp)
     }
   }
+
+  // Redirect to signup if not authenticated
+  onMount(() => {
+    if (!$pubkey) {
+      pushModal(SignUp)
+    }
+  })
 
   // Marketplace kinds: 30017 (stall), 30018 (product) from NIP-15, or 30402 (classified) from NIP-99
   const MARKETPLACE_STALL = 30017
@@ -35,18 +49,25 @@
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)
   let showUnverified = $state(false)
+  let categoryFilter = $state<"all" | "service" | "good">("all")
   const feedEventsStore = writable<TrustedEvent[]>([])
   const showUnverifiedStore = writable(false)
+  const categoryFilterStore = writable<"all" | "service" | "good">("all")
+
+  // Sync categoryFilter state with store
+  $effect(() => {
+    categoryFilterStore.set(categoryFilter)
+  })
 
   // Sync state variable with store
   $effect(() => {
     showUnverifiedStore.set(showUnverified)
   })
 
-  // Use derived to reactively track events, profiles, and toggle state
+  // Use derived to reactively track events, profiles, toggle state, and category filter
   const sortedEventsStore = derived(
-    [feedEventsStore, profilesByPubkey, showUnverifiedStore],
-    ([$events, $profilesByPubkey, $showUnverified]) => {
+    [feedEventsStore, profilesByPubkey, showUnverifiedStore, categoryFilterStore],
+    ([$events, $profilesByPubkey, $showUnverified, $categoryFilter]) => {
       const [verifiedEvents, unverifiedEvents] = partition((event: TrustedEvent) => {
         const profile = $profilesByPubkey.get(event.pubkey)
         if (!profile?.nip05) {
@@ -61,11 +82,17 @@
 
       // If filter is OFF (showUnverified is true), show verified first, then unverified at bottom
       // If filter is ON (showUnverified is false), only show verified
-      if ($showUnverified) {
-        return [...sortedVerified, ...sortedUnverified]
-      } else {
-        return sortedVerified
+      let result = $showUnverified ? [...sortedVerified, ...sortedUnverified] : sortedVerified
+
+      // Apply category filter
+      if ($categoryFilter !== "all") {
+        result = result.filter(event => {
+          const category = getTagValue("category", event.tags)
+          return category === $categoryFilter
+        })
       }
+
+      return result
     },
   )
 
@@ -118,25 +145,52 @@
     }
     return null
   }
+
+  const openChat = (pubkey: string) => {
+    const chatPath = makeChatPath([pubkey])
+    if (get(shouldUnwrap)) {
+      goto(chatPath)
+    } else {
+      pushModal(ChatEnable, {next: chatPath})
+    }
+  }
 </script>
 
 <div class="flex h-full flex-col">
-  <div
-    class="flex items-center justify-between border-b border-base-300 bg-base-100 p-4 md:px-6 lg:px-8">
-    <h2 class="text-xl font-semibold md:text-2xl">Marketplace</h2>
-    <div class="flex items-center gap-2">
+  <div class="flex flex-col gap-2 border-b border-base-300 bg-base-100 p-4 md:px-6 lg:px-8">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold md:text-2xl">Marketplace</h2>
+      <div class="flex items-center gap-2">
+        <Button
+          class="btn btn-neutral btn-sm md:btn-md"
+          onclick={() => {
+            showUnverified = !showUnverified
+            showUnverifiedStore.set(showUnverified)
+          }}>
+          <Icon icon={showUnverified ? EyeClosed : Eye} />
+          {showUnverified ? "Hide unverified" : "Show unverified"}
+        </Button>
+        <Button class="btn btn-primary btn-sm md:btn-md" onclick={createListing}>
+          <Icon icon={AddCircle} />
+          New Listing
+        </Button>
+      </div>
+    </div>
+    <div class="flex gap-2">
       <Button
-        class="btn btn-neutral btn-sm md:btn-md"
-        onclick={() => {
-          showUnverified = !showUnverified
-          showUnverifiedStore.set(showUnverified)
-        }}>
-        <Icon icon={showUnverified ? EyeClosed : Eye} />
-        {showUnverified ? "Hide unverified" : "Show unverified"}
+        class={`btn btn-sm ${categoryFilter === "all" ? "btn-primary" : "btn-neutral"}`}
+        onclick={() => (categoryFilter = "all")}>
+        All
       </Button>
-      <Button class="btn btn-primary btn-sm md:btn-md" onclick={createListing}>
-        <Icon icon={AddCircle} />
-        New Listing
+      <Button
+        class={`btn btn-sm ${categoryFilter === "service" ? "btn-primary" : "btn-neutral"}`}
+        onclick={() => (categoryFilter = "service")}>
+        Services
+      </Button>
+      <Button
+        class={`btn btn-sm ${categoryFilter === "good" ? "btn-primary" : "btn-neutral"}`}
+        onclick={() => (categoryFilter = "good")}>
+        Goods
       </Button>
     </div>
   </div>
@@ -151,9 +205,10 @@
           getTagValue("name", event.tags) ||
           "Untitled Listing"}
         {@const price = data?.price || getTagValue("price", event.tags)}
-        {@const currency = data?.currency || getTagValue("currency", event.tags) || "sats"}
+        {@const currency = data?.currency || getTagValue("currency", event.tags) || "CAD"}
         {@const images = data?.images || [getTagValue("image", event.tags)].filter(Boolean)}
         {@const description = data?.description || event.content}
+        {@const displayEvent = data?.description ? {...event, content: data.description} : event}
         <div in:fly class="card2 bg-alt p-4 shadow-md md:p-6 lg:p-8">
           {#if images.length > 0 && images[0]}
             <img
@@ -169,8 +224,20 @@
             </p>
           {/if}
           {#if description}
-            <p class="mt-2 line-clamp-3 text-sm opacity-75 md:text-base">{description}</p>
+            <div class="mt-2 line-clamp-3 text-sm opacity-75 md:text-base">
+              <ContentMinimal event={displayEvent} url={ANMORE_RELAY} />
+            </div>
           {/if}
+          <div class="mt-3 flex items-center justify-between border-t border-base-300 pt-3">
+            <div class="flex items-center gap-2 text-sm opacity-75">
+              <span>By</span>
+              <ProfileLink pubkey={event.pubkey} url={ANMORE_RELAY} />
+            </div>
+            <Button class="btn btn-primary btn-sm" onclick={() => openChat(event.pubkey)}>
+              <Icon icon={Letter} />
+              Message
+            </Button>
+          </div>
         </div>
       {/each}
       {#if loading}

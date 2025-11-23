@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import {fly} from "@lib/transition"
@@ -11,12 +12,17 @@
   import NoteItem from "@app/components/NoteItem.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import {pushModal} from "@app/util/modal"
-  import {decodeRelay} from "@app/core/state"
+  import {decodeRelay, ANMORE_RELAY} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {NOTE} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
 
   const url = decodeRelay($page.params.relay!)
+
+  // Redirect to root /feed for ANMORE_RELAY (always relay.anmore.me)
+  if (url === ANMORE_RELAY) {
+    goto("/feed", {replaceState: true})
+  }
 
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)

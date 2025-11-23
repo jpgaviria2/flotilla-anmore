@@ -29,17 +29,17 @@
   const {children}: Props = $props()
 
   const primaryNavItems = [
-    {title: "Feed", href: "/home/feed", icon: NotesMinimalistic},
-    {title: "Marketplace", href: "/home/marketplace", icon: ShopMinimalistic},
-    {title: "Fundraising", href: "/home/fundraising", icon: Wallet},
-    {title: "Calendar", href: "/home/calendar", icon: CalendarMinimalistic},
+    {title: "Feed", href: "/feed", icon: NotesMinimalistic},
+    {title: "Marketplace", href: "/marketplace", icon: ShopMinimalistic},
+    {title: "Fundraising", href: "/fundraising", icon: Wallet},
+    {title: "Calendar", href: "/calendar", icon: CalendarMinimalistic},
   ]
 
   const openLogin = () => pushModal(LogIn)
   const openSignUp = () => pushModal(SignUp)
   const openLogOut = () => pushModal(LogOut)
 
-  const goToHome = () => goto("/home/feed")
+  const goToHome = () => goto("/feed")
   const goToSettings = () => goto("/settings/profile")
 </script>
 

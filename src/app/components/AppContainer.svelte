@@ -32,7 +32,9 @@
   }
 </script>
 
-<div class="flex h-screen overflow-hidden" style="padding-top: var(--sait, env(safe-area-inset-top)); padding-bottom: var(--saib, env(safe-area-inset-bottom));">
+<div
+  class="flex h-screen overflow-hidden"
+  style="padding-top: var(--sait, env(safe-area-inset-top)); padding-bottom: var(--saib, env(safe-area-inset-bottom));">
   <PrimaryNav>
     {@render children?.()}
   </PrimaryNav>

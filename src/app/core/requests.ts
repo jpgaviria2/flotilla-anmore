@@ -106,6 +106,12 @@ export const makeFeed = ({
     onExhausted,
   })
 
+  // Trigger initial load to pull from relay
+  const $initialBuffer = get(buffer)
+  if ($initialBuffer.length < 100) {
+    ctrl.load(100)
+  }
+
   const scroller = createScroller({
     element,
     delay: 300,
@@ -122,7 +128,6 @@ export const makeFeed = ({
   })
 
   // Load initial events immediately
-  const $initialBuffer = get(buffer)
   if ($initialBuffer.length > 0) {
     // Take first 30 events and keep the rest in buffer
     const initialEventsToShow = $initialBuffer.slice(0, 30)

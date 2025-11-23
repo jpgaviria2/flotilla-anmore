@@ -58,16 +58,20 @@
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath, makeChatPath} from "@app/util/routes"
+  import {ANMORE_RELAY} from "@app/core/state"
 
   const {url} = $props()
 
   const relay = deriveRelay(url)
-  const chatPath = makeSpacePath(url, "chat")
-  const notesPath = makeSpacePath(url, "notes")
-  const marketplacePath = makeSpacePath(url, "marketplace")
-  const fundraisingPath = makeSpacePath(url, "fundraising")
-  const threadsPath = makeSpacePath(url, "threads")
-  const calendarPath = makeSpacePath(url, "calendar")
+  // For ANMORE_RELAY, use root-level routes (no /spaces or /home prefix)
+  // For other relays, use /spaces routes (future multi-space support)
+  const isAnmoreRelay = url === ANMORE_RELAY
+  const chatPath = isAnmoreRelay ? "/feed" : makeSpacePath(url, "chat")
+  const notesPath = isAnmoreRelay ? "/feed" : makeSpacePath(url, "notes")
+  const marketplacePath = isAnmoreRelay ? "/marketplace" : makeSpacePath(url, "marketplace")
+  const fundraisingPath = isAnmoreRelay ? "/fundraising" : makeSpacePath(url, "fundraising")
+  const threadsPath = isAnmoreRelay ? "/feed" : makeSpacePath(url, "threads")
+  const calendarPath = isAnmoreRelay ? "/calendar" : makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
   const members = deriveSpaceMembers(url)

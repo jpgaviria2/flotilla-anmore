@@ -1,11 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
-  import {session, loadZapperForPubkey} from "@welshman/app"
+  import {removeUndefined} from "@welshman/lib"
+  import {session, loadZapperForPubkey, deriveProfile} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
+  import LightningAddressQR from "@app/components/LightningAddressQR.svelte"
   import {pushModal} from "@app/util/modal"
 
   type Props = {
@@ -19,6 +21,8 @@
   const {url, event, children, replaceState, ...props}: Props = $props()
 
   const zapperPromise = loadZapperForPubkey(event.pubkey)
+  const relays = removeUndefined([url])
+  const profile = deriveProfile(event.pubkey, relays)
 
   const onClick = async () => {
     loading = true
@@ -31,7 +35,12 @@
       } else if ($session?.wallet) {
         pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
       } else {
-        pushModal(WalletConnect, {}, {replaceState})
+        // Check if author has a lightning address
+        if ($profile?.lud16) {
+          pushModal(LightningAddressQR, {url, pubkey: event.pubkey}, {replaceState})
+        } else {
+          pushModal(WalletConnect, {}, {replaceState})
+        }
       }
     } finally {
       loading = false

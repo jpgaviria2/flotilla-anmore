@@ -3,6 +3,7 @@
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import {sortBy, partition, spec, max, pushToMapKey} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {THREAD, getTagValue} from "@welshman/util"
@@ -16,13 +17,18 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {decodeRelay} from "@app/core/state"
+  import {decodeRelay, ANMORE_RELAY} from "@app/core/state"
   import {setChecked} from "@app/util/notifications"
   import {makeCommentFilter} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
 
   const url = decodeRelay($page.params.relay!)
+
+  // Redirect to root /feed for ANMORE_RELAY (always relay.anmore.me)
+  if (url === ANMORE_RELAY) {
+    goto("/feed", {replaceState: true})
+  }
 
   let loading = $state(true)
   let element: HTMLElement | undefined = $state()

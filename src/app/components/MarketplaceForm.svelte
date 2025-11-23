@@ -5,9 +5,11 @@
   import {makeEvent} from "@welshman/util"
   import {publishThunk} from "@welshman/app"
   import {MARKETPLACE_PRODUCT} from "@app/core/state"
-  import {preventDefault} from "@lib/html"
+  import {preventDefault, compressFile} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -17,7 +19,7 @@
   import {PROTECTED} from "@app/core/state"
   import {makeEditor} from "@app/editor"
   import {pushToast} from "@app/util/toast"
-  import {canEnforceNip70} from "@app/core/commands"
+  import {canEnforceNip70, uploadFile} from "@app/core/commands"
 
   type Props = {
     url: string
@@ -30,6 +32,7 @@
       price: string
       currency: string
       image: string
+      category: string
     }
   }
 
@@ -58,6 +61,7 @@
     const tags = [
       ["d", initialValues?.d || randomId()],
       ["title", title],
+      ...(category ? [["category", category]] : []),
       ...(price ? [["price", price]] : []),
       ...(currency ? [["currency", currency]] : []),
       ...(image ? [["image", image]] : []),
@@ -83,9 +87,73 @@
   const editor = makeEditor({url, submit, uploading, content})
 
   let title = $state(initialValues?.title || "")
+  let category = $state(initialValues?.category || "good")
   let price = $state(initialValues?.price || "")
-  let currency = $state(initialValues?.currency || "sats")
+  let currency = $state(initialValues?.currency || "CAD")
   let image = $state(initialValues?.image || "")
+  let imageFile = $state<File | undefined>()
+  let imagePreview = $state(initialValues?.image || "")
+  let imageUploading = $state(false)
+
+  const imageInputId = randomId()
+
+  $effect(() => {
+    if (imageFile) {
+      imageUploading = true
+      const reader = new FileReader()
+      reader.onload = e => {
+        imagePreview = e.target?.result as string
+      }
+      reader.readAsDataURL(imageFile)
+
+      const uploadImage = async () => {
+        try {
+          const compressedFile = await compressFile(imageFile!)
+          const {error, result} = await uploadFile(compressedFile)
+
+          if (error) {
+            pushToast({theme: "error", message: error})
+            imageFile = undefined
+            imagePreview = initialValues?.image || ""
+            image = initialValues?.image || ""
+          } else if (result?.url) {
+            image = result.url
+            imagePreview = result.url
+          }
+        } catch (err) {
+          pushToast({theme: "error", message: "Failed to upload image"})
+          imageFile = undefined
+          imagePreview = initialValues?.image || ""
+          image = initialValues?.image || ""
+        } finally {
+          imageUploading = false
+        }
+      }
+
+      uploadImage()
+    } else if (!image) {
+      imagePreview = ""
+    }
+  })
+
+  $effect(() => {
+    if (image && !imageFile && !imageUploading) {
+      imagePreview = image
+    }
+  })
+
+  const handleImageUpload = async (event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0]
+    if (file && file.type.startsWith("image/")) {
+      imageFile = file
+    }
+  }
+
+  const clearImage = () => {
+    imageFile = undefined
+    image = ""
+    imagePreview = ""
+  }
 </script>
 
 <form novalidate class="column gap-4" onsubmit={preventDefault(submit)}>
@@ -98,6 +166,17 @@
       <label class="input input-bordered flex w-full items-center gap-2">
         <input bind:value={title} class="grow" type="text" />
       </label>
+    {/snippet}
+  </Field>
+  <Field>
+    {#snippet label()}
+      <p>Category*</p>
+    {/snippet}
+    {#snippet input()}
+      <select bind:value={category} class="select select-bordered w-full">
+        <option value="good">Good</option>
+        <option value="service">Service</option>
+      </select>
     {/snippet}
   </Field>
   <Field>
@@ -129,19 +208,60 @@
           <input bind:value={price} class="grow" type="text" placeholder="0" />
         </label>
         <label class="input input-bordered flex w-full items-center gap-2">
-          <input bind:value={currency} class="grow" type="text" placeholder="sats" />
+          <input bind:value={currency} class="grow" type="text" placeholder="CAD" />
         </label>
       </div>
     {/snippet}
   </Field>
   <Field>
     {#snippet label()}
-      <p>Image URL (optional)</p>
+      <p>Image (optional)</p>
     {/snippet}
     {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <input bind:value={image} class="grow" type="url" placeholder="https://..." />
-      </label>
+      <div class="flex flex-col gap-2">
+        {#if imagePreview}
+          <div class="relative">
+            <img
+              src={imagePreview}
+              alt="Preview"
+              class="h-48 w-full rounded-lg border border-base-300 object-cover" />
+            <Button
+              type="button"
+              class="btn btn-error btn-sm absolute right-2 top-2"
+              onclick={clearImage}>
+              <Icon icon={CloseCircle} />
+            </Button>
+          </div>
+        {/if}
+        <div class="flex gap-2">
+          <label class="input input-bordered flex w-full items-center gap-2">
+            <input
+              bind:value={image}
+              class="grow"
+              type="url"
+              placeholder="https://..."
+              disabled={imageUploading} />
+          </label>
+          <label
+            for={imageInputId}
+            class="btn btn-neutral flex cursor-pointer items-center gap-2"
+            class:btn-disabled={imageUploading}>
+            {#if imageUploading}
+              <span class="loading loading-spinner loading-xs"></span>
+            {:else}
+              <Icon icon={UploadMinimalistic} />
+            {/if}
+            Upload
+            <input
+              id={imageInputId}
+              type="file"
+              accept="image/*"
+              class="hidden"
+              onchange={handleImageUpload}
+              disabled={imageUploading} />
+          </label>
+        </div>
+      </div>
     {/snippet}
   </Field>
   <ModalFooter>

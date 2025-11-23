@@ -114,7 +114,7 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-7 gap-1">
+  <div class="grid min-w-0 grid-cols-7 gap-1">
     {#each weekDays as day}
       <div class="p-2 text-center text-xs font-semibold opacity-75">{day}</div>
     {/each}
