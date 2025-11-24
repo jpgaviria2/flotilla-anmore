@@ -32,13 +32,6 @@
     }
   }
 
-  // Redirect to signup if not authenticated
-  onMount(() => {
-    if (!$pubkey) {
-      pushModal(SignUp)
-    }
-  })
-
   const getStart = (event: TrustedEvent) => parseInt(getTagValue("start", event.tags) || "")
 
   let element: HTMLElement | undefined = $state()

@@ -27,13 +27,6 @@
     }
   }
 
-  // Redirect to signup if not authenticated
-  onMount(() => {
-    if (!$pubkey) {
-      pushModal(SignUp)
-    }
-  })
-
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)
   let showUnverified = $state(false)

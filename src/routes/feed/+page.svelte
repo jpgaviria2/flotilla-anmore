@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import {writable, get, derived} from "svelte/store"
   import {fly} from "@lib/transition"
   import {sortBy, partition} from "@welshman/lib"
@@ -33,13 +32,6 @@
       pushModal(SignUp)
     }
   }
-
-  // Redirect to signup if not authenticated
-  onMount(() => {
-    if (!$pubkey) {
-      pushModal(SignUp)
-    }
-  })
 
   // Use derived to reactively track events, profiles, and toggle state
   // Make showUnverified a writable store so it's properly reactive

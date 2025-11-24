@@ -8,7 +8,6 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {onMount} from "svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import SignUp from "@app/components/SignUp.svelte"
@@ -32,13 +31,6 @@
       pushModal(SignUp)
     }
   }
-
-  // Redirect to signup if not authenticated
-  onMount(() => {
-    if (!$pubkey) {
-      pushModal(SignUp)
-    }
-  })
 
   // Use derived to reactively track events, profiles, and toggle state
   // Make showUnverified a writable store so it's properly reactive

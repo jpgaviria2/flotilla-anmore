@@ -35,13 +35,6 @@
     }
   }
 
-  // Redirect to signup if not authenticated
-  onMount(() => {
-    if (!$pubkey) {
-      pushModal(SignUp)
-    }
-  })
-
   // Marketplace kinds: 30017 (stall), 30018 (product) from NIP-15, or 30402 (classified) from NIP-99
   const MARKETPLACE_STALL = 30017
   const MARKETPLACE_PRODUCT = 30018
