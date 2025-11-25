@@ -214,9 +214,10 @@ You can add post-build tasks here if needed (e.g., uploading to TestFlight).
 
 ### CI Scripts Location
 ```
-ios/ci_scripts/
-├── ci_pre_xcodebuild.sh   (runs before Xcode build)
-└── ci_post_xcodebuild.sh  (runs after Xcode build)
+ci_scripts/                    (at repository root)
+├── ci_post_clone.sh          (runs after cloning, creates workspace)
+├── ci_pre_xcodebuild.sh     (runs before Xcode build)
+└── ci_post_xcodebuild.sh    (runs after Xcode build)
 ```
 
 ### Required Environment Variables
