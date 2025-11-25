@@ -98,8 +98,9 @@ This guide will walk you through setting up Xcode Cloud for the Flotilla iOS app
 ### 3.4 CI Scripts Location
 
 1. **Verify CI scripts path:**
-   - Xcode Cloud automatically looks for scripts in `ios/ci_scripts/`
+   - Xcode Cloud automatically looks for scripts in `ci_scripts/` at the repository root
    - Our scripts are already in place:
+     - `ci_post_clone.sh` (runs after cloning, before package resolution)
      - `ci_pre_xcodebuild.sh` (runs before build)
      - `ci_post_xcodebuild.sh` (runs after build)
 
