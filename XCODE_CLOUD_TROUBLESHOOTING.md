@@ -1,6 +1,28 @@
 # Xcode Cloud Troubleshooting
 
-## Current Issue: "workspace App.xcworkspace does not exist at ios/App.xcworkspace"
+## Current Issue: "Unable to open base configuration reference file Pods-Flotilla Chat.release.xcconfig"
+
+### Problem
+Xcode Cloud error: `Unable to open base configuration reference file '/Volumes/workspace/repository/ios/App/Pods/Target Support Files/Pods-Flotilla Chat/Pods-Flotilla Chat.release.xcconfig'`
+
+### Root Cause
+The Pods directory and xcconfig files are not being created. This happens when:
+- `pod install` fails silently in `ci_post_clone.sh`
+- The script doesn't verify that Pods were actually installed
+- Xcode Cloud tries to build before pods are fully installed
+
+### Solution
+The `ci_post_clone.sh` script has been updated to:
+1. Verify Pods directory is created after `pod install`
+2. Check that xcconfig files exist
+3. Provide better error messages if installation fails
+4. Exit with error if required files are missing
+
+**Check build logs** for the Post-Clone section to see if `pod install` is running and succeeding.
+
+---
+
+## Previous Issue: "workspace App.xcworkspace does not exist at ios/App.xcworkspace"
 
 ### Problem
 Xcode Cloud reports: `workspace App.xcworkspace does not exist at ios/App.xcworkspace`
