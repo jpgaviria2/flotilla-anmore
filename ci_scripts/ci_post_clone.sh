@@ -29,12 +29,28 @@ fi
 
 echo "📱 Installing CocoaPods dependencies..."
 # Install CocoaPods dependencies to generate the workspace
-cd ios/App
+IOS_APP_DIR="$PROJECT_ROOT/ios/App"
+
+if [ ! -d "$IOS_APP_DIR" ]; then
+    echo "❌ ios/App directory not found at: $IOS_APP_DIR"
+    echo "📁 Project root: $PROJECT_ROOT"
+    echo "📁 Contents of project root:"
+    ls -la "$PROJECT_ROOT" | head -20
+    exit 1
+fi
+
+cd "$IOS_APP_DIR"
 export LANG=en_US.UTF-8
 
 echo "📂 Current directory: $(pwd)"
 echo "📁 Checking for Podfile:"
-ls -la Podfile || echo "❌ Podfile not found!"
+if [ ! -f "Podfile" ]; then
+    echo "❌ Podfile not found!"
+    echo "📁 Contents of ios/App:"
+    ls -la
+    exit 1
+fi
+echo "✅ Podfile found"
 
 # Ensure CocoaPods is installed
 if ! command -v pod &> /dev/null; then
@@ -44,16 +60,38 @@ fi
 
 echo "🔧 Running pod install..."
 # Install pods to generate the workspace
-pod install
+# Use --repo-update to ensure we have the latest pod specs
+pod install --repo-update || pod install
 
-echo "📁 Verifying workspace was created:"
-if [ -f "App.xcworkspace/contents.xcworkspacedata" ]; then
-    echo "✅ Workspace created successfully!"
-    ls -la App.xcworkspace/
-else
-    echo "❌ Workspace not found after pod install!"
+echo "📁 Verifying workspace was created..."
+WORKSPACE_PATH="$IOS_APP_DIR/App.xcworkspace"
+if [ ! -d "$WORKSPACE_PATH" ]; then
+    echo "❌ Workspace directory not found at: $WORKSPACE_PATH"
     echo "📁 Contents of ios/App:"
     ls -la
+    exit 1
+fi
+
+if [ ! -f "$WORKSPACE_PATH/contents.xcworkspacedata" ]; then
+    echo "❌ Workspace contents file not found!"
+    echo "📁 Workspace directory contents:"
+    ls -la "$WORKSPACE_PATH"
+    exit 1
+fi
+
+echo "✅ Workspace created successfully!"
+echo "📁 Workspace path: $WORKSPACE_PATH"
+echo "📁 Workspace contents:"
+ls -la "$WORKSPACE_PATH"
+
+# Verify from project root
+cd "$PROJECT_ROOT"
+if [ -f "ios/App/App.xcworkspace/contents.xcworkspacedata" ]; then
+    echo "✅ Workspace verified at ios/App/App.xcworkspace (relative to project root)"
+else
+    echo "❌ Workspace not found at ios/App/App.xcworkspace from project root!"
+    echo "📁 Current directory: $(pwd)"
+    echo "📁 Absolute path check: $WORKSPACE_PATH"
     exit 1
 fi
 

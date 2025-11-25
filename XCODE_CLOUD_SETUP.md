@@ -229,14 +229,17 @@ ci_scripts/                    (at repository root)
 
 ### Build Process Flow
 1. Xcode Cloud clones repository
-2. Runs `ci_pre_xcodebuild.sh`:
-   - Installs dependencies
+2. Runs `ci_post_clone.sh` (Post-Clone script):
+   - Installs Node.js dependencies
+   - Installs CocoaPods dependencies
+   - **Creates the workspace** (`App.xcworkspace`) - **Critical for Xcode Cloud**
+3. Xcode resolves packages (looks for workspace at `ios/App/App.xcworkspace`)
+4. Runs `ci_pre_xcodebuild.sh` (Pre-Xcodebuild script):
    - Builds web app
    - Syncs Capacitor
-   - Installs CocoaPods
-3. Xcode builds iOS app
-4. Runs `ci_post_xcodebuild.sh` (if needed)
-5. Distributes to TestFlight (if configured)
+5. Xcode builds iOS app
+6. Runs `ci_post_xcodebuild.sh` (if needed)
+7. Distributes to TestFlight (if configured)
 
 ## Next Steps
 
