@@ -33,12 +33,8 @@ echo "🔄 Syncing Capacitor..."
 # Sync Capacitor (copies web build to iOS)
 npx cap sync ios
 
-echo "📱 Installing CocoaPods dependencies..."
-# Install CocoaPods dependencies
-cd ios/App
-export LANG=en_US.UTF-8
-pod install
-cd "$PROJECT_ROOT"
+# Note: CocoaPods dependencies are installed in ci_post_clone.sh
+# to ensure workspace exists before Xcode resolves packages
 
 echo "✅ Pre-build script completed successfully!"
 
