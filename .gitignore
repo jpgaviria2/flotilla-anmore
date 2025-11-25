@@ -31,7 +31,10 @@ build/
 ios/App/App/public
 ios/DerivedData
 xcuserdata/
-*.xcworkspace/
+# *.xcworkspace/ - Commented out for Xcode Cloud (workspace needed for package resolution)
+# Note: ios/App/App.xcworkspace/contents.xcworkspacedata is committed for Xcode Cloud compatibility
+# But ignore user-specific workspace files
+ios/App/App.xcworkspace/xcuserdata/
 *.mode1v3
 *.mode2v3
 *.perspectivev3
