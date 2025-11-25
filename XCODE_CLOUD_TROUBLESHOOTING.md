@@ -1,6 +1,27 @@
 # Xcode Cloud Troubleshooting
 
-## Current Issue: "Post-Clone script not found"
+## Current Issue: "workspace App.xcworkspace does not exist at ios/App.xcworkspace"
+
+### Problem
+Xcode Cloud reports: `workspace App.xcworkspace does not exist at ios/App.xcworkspace`
+
+### Root Cause
+The Xcode Cloud workflow is configured with the wrong workspace path:
+- ❌ **Configured**: `ios/App.xcworkspace` (missing `App/` directory)
+- ✅ **Correct**: `ios/App/App.xcworkspace` (full path)
+
+### Solution
+Update the Xcode Cloud workflow configuration:
+1. Open Xcode → Product → Xcode Cloud → View Workflows
+2. Edit your workflow
+3. In Build Configuration, set Workspace to: `ios/App/App.xcworkspace`
+4. Save and trigger a new build
+
+See `XCODE_CLOUD_WORKSPACE_FIX.md` for detailed instructions.
+
+---
+
+## Previous Issue: "Post-Clone script not found"
 
 ### Problem
 Xcode Cloud reports: `Post-Clone script not found at ci_scripts/ci_post_clone.sh`
