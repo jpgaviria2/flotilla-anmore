@@ -216,6 +216,21 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
 }
 
 export const deriveRelayAuthError = (url: string, claim = "") => {
+  if (!pubkey.get()) {
+    return derived(
+      [relaysMostlyRestricted, deriveSocket(url)],
+      ([$relaysMostlyRestricted, $socket]) => {
+        if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
+          return stripPrefix($socket.auth.details)
+        }
+
+        if ($relaysMostlyRestricted[url]) {
+          return stripPrefix($relaysMostlyRestricted[url])
+        }
+      },
+    )
+  }
+
   // Kick off the auth process
   Pool.get().get(url).auth.attemptAuth(sign)
 
