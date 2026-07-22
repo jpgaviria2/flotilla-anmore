@@ -29,6 +29,7 @@
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import RecentConversation from "@app/components/RecentConversation.svelte"
   import {decodeRelay, deriveEventsForUrl, CONTENT_KINDS} from "@app/core/state"
+  import {isNip52TimeEvent} from "@app/util/nip52"
 
   const url = decodeRelay($page.params.relay!)
   const since = ago(MONTH)
@@ -63,6 +64,8 @@
       const latestActivityByKey = new Map<string, number>()
 
       for (const event of $content) {
+        if (event.kind === EVENT_TIME && !isNip52TimeEvent(event)) continue
+
         for (const k of getIdAndAddress(event)) {
           latestActivityByKey.set(k, Math.max(latestActivityByKey.get(k) || 0, event.created_at))
         }
@@ -134,9 +137,9 @@
           <ClassifiedItem {url} {event} />
         {:else if event.kind === ZAP_GOAL}
           <GoalItem {url} {event} />
-        {:else if event.kind === EVENT_TIME}
+        {:else if event.kind === EVENT_TIME && isNip52TimeEvent(event)}
           <CalendarEventItem {url} {event} />
-        {:else}
+        {:else if event.kind !== EVENT_TIME}
           <NoteItem {url} {event} />
         {/if}
       {/each}
