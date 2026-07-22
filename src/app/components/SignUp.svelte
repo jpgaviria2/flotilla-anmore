@@ -22,6 +22,7 @@
   import SignUpKey from "@app/components/SignUpKey.svelte"
   import SignUpEmail from "@app/components/SignUpEmail.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
+  import SignUpNip05 from "@app/components/SignUpNip05.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
   import {setChecked} from "@app/util/notifications"
   import {pushModal, clearModals} from "@app/util/modal"
@@ -69,7 +70,8 @@
   const flows = {
     email: {
       start: () => pushModal(SignUpEmail, {next: flows.email.profile}),
-      profile: () => pushModal(SignUpProfile, {next: flows.email.complete}),
+      profile: () => pushModal(SignUpProfile, {next: flows.email.nip05}),
+      nip05: () => pushModal(SignUpNip05, {next: flows.email.complete}),
       complete: () => pushModal(SignUpComplete, {next: flows.email.finalize}),
       finalize: () => {
         const email = getKey<string>("signup.email")!
@@ -81,7 +83,8 @@
       },
     },
     nostr: {
-      start: () => pushModal(SignUpProfile, {next: flows.nostr.key}),
+      start: () => pushModal(SignUpProfile, {next: flows.nostr.nip05}),
+      nip05: () => pushModal(SignUpNip05, {next: flows.nostr.key}),
       key: () => pushModal(SignUpKey, {next: flows.nostr.complete}),
       complete: () => pushModal(SignUpComplete, {next: flows.nostr.finalize}),
       finalize: () => {
