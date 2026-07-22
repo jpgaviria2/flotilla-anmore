@@ -8,6 +8,7 @@ import {
   ALERT_WEB,
   APP_DATA,
   BLOSSOM_SERVERS,
+  COMMENT,
   FOLLOWS,
   MESSAGING_RELAYS,
   MUTES,
@@ -62,7 +63,8 @@ const kinds = {
     ROOM_REMOVE_MEMBER,
     ROOM_CREATE_PERMISSION,
   ],
-  content: [...MESSAGE_KINDS, ...DM_KINDS],
+  publicContent: [...MESSAGE_KINDS, COMMENT],
+  privateContent: DM_KINDS,
 }
 
 const rankEvent = (event: TrustedEvent) => {
@@ -70,7 +72,8 @@ const rankEvent = (event: TrustedEvent) => {
   if (kinds.alert.includes(event.kind)) return 8
   if (kinds.space.includes(event.kind)) return 7
   if (kinds.room.includes(event.kind)) return 6
-  if (!isMobile && kinds.content.includes(event.kind)) return 5
+  if (kinds.publicContent.includes(event.kind)) return 5
+  if (!isMobile && kinds.privateContent.includes(event.kind)) return 5
   return 0
 }
 
