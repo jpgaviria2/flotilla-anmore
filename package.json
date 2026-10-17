@@ -57,7 +57,7 @@
     "@poppanator/sveltekit-svg": "^4.2.1",
     "@sentry/browser": "^8.55.0",
     "@sveltejs/adapter-static": "^3.0.10",
-    "@tiptap/core": "^2.26.3",
+    "@tiptap/core": "^3.30.4",
     "@types/qrcode": "^1.5.5",
     "@types/throttle-debounce": "^5.0.2",
     "@vite-pwa/assets-generator": "^0.2.6",
