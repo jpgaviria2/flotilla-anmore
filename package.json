@@ -42,7 +42,7 @@
   "type": "module",
   "dependencies": {
     "@capacitor-community/safe-area": "7.0.0-alpha.1",
-    "@capacitor/android": "^7.4.3",
+    "@capacitor/android": "^7.6.9",
     "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
