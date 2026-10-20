@@ -9,6 +9,7 @@
   import {THREAD, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
@@ -17,6 +18,7 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
+  import FacebookCrossPost from "@app/components/FacebookCrossPost.svelte"
   import {decodeRelay, ANMORE_RELAY} from "@app/core/state"
   import {setChecked} from "@app/util/notifications"
   import {makeCommentFilter} from "@app/core/state"
@@ -35,6 +37,7 @@
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   const createThread = () => pushModal(ThreadCreate, {url})
+  const crossPostFacebook = () => pushModal(FacebookCrossPost, {relayUrl: url})
 
   const items = $derived.by(() => {
     const scores = new Map<string, number[]>()
@@ -84,6 +87,10 @@
       <Button class="btn btn-primary btn-sm" onclick={createThread}>
         <Icon icon={NotesMinimalistic} />
         Create a Thread
+      </Button>
+      <Button class="btn btn-secondary btn-sm" onclick={crossPostFacebook}>
+        <Icon icon={LinkRound} />
+        Import from Facebook
       </Button>
       <MenuSpaceButton {url} />
     </div>
